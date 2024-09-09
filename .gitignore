@@ -13,3 +13,5 @@ chrome_profile
 answers.json
 data*
 *virtual
+data_folder/
+resumes/
