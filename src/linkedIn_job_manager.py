@@ -31,11 +31,12 @@ class LinkedInJobManager:
         self.set_old_answers = set()
         self.easy_applier_component = None
 
-    def set_parameters(self, parameters):
+    def set_parameters(self, parameters, jobListLinks):
         self.company_blacklist = parameters.get('companyBlacklist', []) or []
         self.title_blacklist = parameters.get('titleBlacklist', []) or []
         self.positions = parameters.get('positions', [])
         self.locations = parameters.get('locations', [])
+        self.jobListLinks = jobListLinks
         self.base_search_url = self.get_base_search_url(parameters)
         self.seen_jobs = []
         resume_path = parameters.get('uploads', {}).get('resume', None)
@@ -55,23 +56,24 @@ class LinkedInJobManager:
 
     def start_applying(self):
         self.easy_applier_component = LinkedInEasyApplier(self.driver, self.resume_path, self.set_old_answers, self.gpt_answerer, self.resume_generator_manager)
-        searches = list(product(self.positions, self.locations))
+        # searches = list(product(self.positions, self.locations))
+        searches = self.jobListLinks
         random.shuffle(searches)
         page_sleep = 0
         minimum_time = 60 * 15
         minimum_page_time = time.time() + minimum_time
 
-        for position, location in searches:
-            location_url = "&location=" + location
+        for searchLink in searches:
+            # location_url = "&location=" + location
             job_page_number = -1
-            utils.printyellow(f"Starting the search for {position} in {location}.")
+            utils.printyellow(f"Starting the search for {searchLink}.")
 
             try:
                 while True:
                     page_sleep += 1
                     job_page_number += 1
                     utils.printyellow(f"Going to job page {job_page_number}")
-                    self.next_job_page(position, location_url, job_page_number)
+                    self.next_job_page(searchLink, job_page_number)
                     time.sleep(random.uniform(1.5, 3.5))
                     utils.printyellow("Starting the application process for this page...")
                     self.apply_jobs()
@@ -178,8 +180,8 @@ class LinkedInJobManager:
         base_url = "&".join(url_parts)
         return f"?{base_url}{date_param}"
     
-    def next_job_page(self, position, location, job_page):
-        self.driver.get(f"https://www.linkedin.com/jobs/search/{self.base_search_url}&keywords={position}{location}&start={job_page * 25}")
+    def next_job_page(self, jobLink, job_page):
+        self.driver.get(f"{jobLink}&start={job_page * 25}")
     
     def extract_job_information_from_tile(self, job_tile):
         job_title, company, job_location, apply_method, link = "", "", "", "", ""

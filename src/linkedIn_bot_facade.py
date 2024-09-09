@@ -48,10 +48,10 @@ class LinkedInBotFacade:
         self.apply_component.set_resume_generator_manager(resume_generator_manager)
         self.state.gpt_answerer_set = True
 
-    def set_parameters(self, parameters):
+    def set_parameters(self, parameters, jobListLinks):
         self._validate_non_empty(parameters, "Parameters")
         self.parameters = parameters
-        self.apply_component.set_parameters(parameters)
+        self.apply_component.set_parameters(parameters, jobListLinks)
         self.state.parameters_set = True
 
     def start_login(self):

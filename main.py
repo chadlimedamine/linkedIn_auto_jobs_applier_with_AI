@@ -158,7 +158,7 @@ def init_browser() -> webdriver.Chrome:
     except Exception as e:
         raise RuntimeError(f"Failed to initialize browser: {str(e)}")
 
-def create_and_run_bot(email: str, password: str, parameters: dict, openai_api_key: str):
+def create_and_run_bot(email: str, password: str, parameters: dict, openai_api_key: str, jobListLinks):
     try:
         style_manager = StyleManager()
         resume_generator = ResumeGenerator()
@@ -180,7 +180,7 @@ def create_and_run_bot(email: str, password: str, parameters: dict, openai_api_k
         bot.set_secrets(email, password)
         bot.set_job_application_profile_and_resume(job_application_profile_object, resume_object)
         bot.set_gpt_answerer_and_resume_generator(gpt_answerer_component, resume_generator_manager)
-        bot.set_parameters(parameters)
+        bot.set_parameters(parameters, jobListLinks)
         bot.start_login()
         bot.start_apply()
     except WebDriverException as e:
@@ -201,8 +201,13 @@ def main(resume: Path = None):
         
         parameters['uploads'] = FileManager.file_paths_to_dict(resume, plain_text_resume_file)
         parameters['outputFileDirectory'] = output_folder
+
+        # get predefined search links
+        searchFile = open("data_folder/searchLinks.txt", "r")
+        jobListLinks = searchFile.readlines()
+        searchFile.close()
         
-        create_and_run_bot(email, password, parameters, openai_api_key)
+        create_and_run_bot(email, password, parameters, openai_api_key, jobListLinks)
     except ConfigError as ce:
         print(f"Configuration error: {str(ce)}")
         print("Refer to the configuration guide for troubleshooting: https://github.com/feder-cr/LinkedIn_AIHawk_automatic_job_application/blob/main/readme.md#configuration")
